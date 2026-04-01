@@ -16,7 +16,7 @@ int main() {
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(PORT);
-    
+
 	bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
 	listen(server_fd, 1);
 	client_fd = accept(server_fd, NULL, NULL);
@@ -25,16 +25,13 @@ int main() {
     
 	if (recv_message(client_fd, &msg_length, &msg_type, payload) != 0) {
 		printf("Handshake failed\n");
-		close(client_fd);
-		close(server_fd);
-		return 1;
+		
+		goto clean;	
 	}
     
 	if (msg_type != MSG_HELLO) {
         	printf("Handshake failed: expected MSG_HELLO, got type %d\n", msg_type);
-        	close(client_fd);
-        	close(server_fd);
-		return 1;
+		goto clean;
 	}
     
 	printf("[%s]: Hello (nick: %s)\n",client_str, payload); 
@@ -57,6 +54,7 @@ int main() {
                 
         case MSG_BYE:
                 printf("[%s]: BYE\n", client_str);
+                send_message(client_fd, 1 + 3, MSG_BYE, "BYE");
                 goto clean;
                 
         default:
